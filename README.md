@@ -1,17 +1,43 @@
-# empowerher_app
+# EmpowerHer Backend
 
-A new Flutter project.
+Node.js Express backend for the EmpowerHer AI Support Platform.
+
+## Features
+- JWT User Authentication
+- Health Vitals Logging
+- AI-powered Chat Companion (OpenAI)
+- Community Posts & Interaction
+- MongoDB Data Persistence
+
+## Prerequisites
+- Node.js (v18+)
+- MongoDB (Local or Atlas)
+- OpenAI API Key
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. **Install Dependencies:**
+   ```bash
+   cd backend
+   npm install
+   ```
 
-A few resources to get you started if this is your first Flutter project:
+2. **Environment Setup:**
+   - Copy `.env.example` to `.env`
+   - Fill in your `MONGO_URI`, `JWT_SECRET`, and `OPENAI_API_KEY`.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+3. **Run the Server:**
+   ```bash
+   # Development mode with nodemon
+   npm run dev
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+   # Production mode
+   npm start
+   ```
+
+## API Endpoints
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/chat/ask` - Send message to AI
+- `POST /api/vitals` - Log health data
+- `GET /api/community` - View community posts
