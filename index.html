@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sthri – Smart Maternal Health Companion</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --pink: #e84393; --pink-light: #fce4f0; --pink-soft: #f9afd1;
+    --purple: #7c3aed; --purple-light: #ede9fe;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --amber: #d97706; --amber-light: #fef3c7;
+    --red: #dc2626; --red-light: #fee2e2;
+    --green: #16a34a; --green-light: #dcfce7;
+    --blue: #2563eb; --blue-light: #dbeafe;
+    --gray: #6b7280; --gray-light: #f3f4f6;
+    --white: #ffffff; --text: #1f2937; --text2: #6b7280;
+    --radius: 16px; --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(232,67,147,0.10);
+    --shadow-lg: 0 8px 40px rgba(124,58,237,0.13);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fdf6fb; color: var(--text); min-height: 100vh; }
+
+  /* NAV */
+  nav { background: var(--white); border-bottom: 1px solid #f0e6f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(232,67,147,0.07); }
+  .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--pink), var(--purple)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+  .logo-text { font-size: 20px; font-weight: 700; background: linear-gradient(90deg, var(--pink), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a { padding: 8px 14px; border-radius: 8px; font-size: 14px; text-decoration: none; color: var(--text2); transition: all .2s; font-weight: 500; cursor: pointer; }
+  .nav-links a:hover, .nav-links a.active { background: var(--pink-light); color: var(--pink); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .btn-primary { background: linear-gradient(135deg, var(--pink), var(--purple)); color: white; border: none; padding: 9px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .alert-badge { background: var(--red); color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)}50%{transform:scale(1.15)} }
+
+  /* PAGES */
+  .page { display: none; max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  .page.active { display: block; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #fce4f0 0%, #ede9fe 50%, #ccfbf1 100%); border-radius: 24px; padding: 56px 48px; margin-bottom: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .hero-tag { display: inline-flex; align-items: center; gap: 6px; background: white; border: 1px solid var(--pink-soft); color: var(--pink); font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px; margin-bottom: 20px; }
+  .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+  .hero h1 span { background: linear-gradient(90deg, var(--pink), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { font-size: 17px; color: var(--text2); line-height: 1.7; margin-bottom: 28px; }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-outline { border: 2px solid var(--pink); color: var(--pink); background: white; padding: 9px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .btn-outline:hover { background: var(--pink-light); }
+  .hero-visual { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card { background: white; border-radius: var(--radius-sm); padding: 18px; box-shadow: var(--shadow); }
+  .stat-card .icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+  .stat-card .val { font-size: 24px; font-weight: 700; }
+  .stat-card .lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .stat-card.span2 { grid-column: span 2; }
+  .progress-bar { height: 8px; background: #f0e6f0; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--pink), var(--purple)); }
+
+  /* FEATURES GRID */
+  .section-header { text-align: center; margin-bottom: 32px; }
+  .section-header h2 { font-size: 30px; font-weight: 700; margin-bottom: 8px; }
+  .section-header p { color: var(--text2); font-size: 16px; }
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+  .feature-card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid #f0e6f0; cursor: pointer; transition: transform .2s, box-shadow .2s; position: relative; overflow: hidden; }
+  .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--accent, linear-gradient(90deg, var(--pink), var(--purple))); }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .feature-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 14px; }
+  .feature-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .feature-card p { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 14px; }
+  .feature-link { font-size: 13px; font-weight: 600; color: var(--pink); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+
+  /* DASHBOARD */
+  .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+  .dash-main { display: flex; flex-direction: column; gap: 20px; }
+  .dash-side { display: flex; flex-direction: column; gap: 20px; }
+  .card { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid #f0e6f0; }
+  .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-badge { font-size: 11px; background: var(--pink-light); color: var(--pink); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+  .metric { background: var(--gray-light); border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+  .metric .m-val { font-size: 26px; font-weight: 800; }
+  .metric .m-lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .metric .m-trend { font-size: 11px; margin-top: 4px; }
+
+  /* DAILY CHECK */
+  .check-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label { font-size: 14px; font-weight: 600; color: var(--text); }
+  .form-group select, .form-group input[type=number] { padding: 10px 14px; border: 1.5px solid #e5e7eb; border-radius: var(--radius-sm); font-size: 14px; background: white; appearance: none; color: var(--text); outline: none; transition: border .2s; }
+  .form-group select:focus, .form-group input:focus { border-color: var(--pink); }
+  .mood-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+  .mood-btn { padding: 10px; border: 2px solid #e5e7eb; border-radius: var(--radius-sm); background: white; font-size: 22px; cursor: pointer; transition: all .2s; text-align: center; }
+  .mood-btn.selected { border-color: var(--pink); background: var(--pink-light); transform: scale(1.1); }
+  .mood-btn:hover { border-color: var(--pink-soft); }
+  .slider-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .slider-wrap input[type=range] { width: 100%; accent-color: var(--pink); }
+  .slider-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
+  .submit-row { grid-column: span 2; display: flex; justify-content: center; margin-top: 8px; }
+  .ai-result { background: linear-gradient(135deg, var(--purple-light), var(--pink-light)); border-radius: var(--radius-sm); padding: 20px; margin-top: 16px; border-left: 4px solid var(--purple); }
+  .ai-result h4 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--purple); display: flex; align-items: center; gap: 6px; }
+  .ai-result p { font-size: 14px; line-height: 1.7; color: var(--text); }
+  .ai-typing { display: inline-flex; gap: 4px; align-items: center; }
+  .ai-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--purple); animation: bounce 1.2s infinite; }
+  .ai-typing span:nth-child(2) { animation-delay: .2s; }
+  .ai-typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)} }
+
+  /* FETUS VISUALIZER */
+  .fetus-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .week-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .week-btn { padding: 6px 12px; border-radius: 8px; border: 1.5px solid #e5e7eb; background: white; font-size: 13px; cursor: pointer; font-weight: 500; transition: all .2s; }
+  .week-btn.active { background: var(--pink); color: white; border-color: var(--pink); }
+  .fetus-svg-wrap { display: flex; justify-content: center; align-items: center; padding: 24px; background: linear-gradient(135deg, #fce4f0, #ede9fe); border-radius: var(--radius); min-height: 300px; }
+  .fetus-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .fetus-stat { background: var(--gray-light); border-radius: var(--radius-sm); padding: 14px; }
+  .fetus-stat .fs-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .fetus-stat .fs-value { font-size: 18px; font-weight: 700; }
+  .fetus-impacts { display: flex; flex-direction: column; gap: 10px; }
+  .impact-item { background: white; border-radius: var(--radius-sm); padding: 14px; border-left: 4px solid var(--green); display: flex; gap: 12px; align-items: flex-start; }
+  .impact-item.warn { border-left-color: var(--amber); }
+  .impact-item.danger { border-left-color: var(--red); }
+
+  /* DIET PLANNER */
+  .diet-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .meal-plan { display: flex; flex-direction: column; gap: 16px; }
+  .meal-section { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid #e5e7eb; }
+  .meal-header { padding: 12px 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .meal-header.breakfast { background: var(--amber-light); color: var(--amber); }
+  .meal-header.lunch { background: var(--green-light); color: var(--green); }
+  .meal-header.dinner { background: var(--purple-light); color: var(--purple); }
+  .meal-header.snacks { background: var(--teal-light); color: var(--teal); }
+  .meal-items { padding: 12px 16px; background: white; display: flex; flex-direction: column; gap: 8px; }
+  .meal-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 8px; background: var(--gray-light); }
+  .meal-item-name { font-size: 14px; font-weight: 500; }
+  .meal-item-info { font-size: 12px; color: var(--text2); }
+  .nutrient-bar-wrap { margin-top: 20px; }
+  .nutrient-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .nutrient-label { width: 100px; font-size: 13px; font-weight: 600; }
+  .nutrient-track { flex: 1; height: 10px; background: #f0e6f0; border-radius: 5px; overflow: hidden; }
+  .nutrient-fill { height: 100%; border-radius: 5px; transition: width .6s; }
+  .nutrient-val { width: 60px; font-size: 12px; color: var(--text2); text-align: right; }
+
+  /* MENTAL HEALTH */
+  .mental-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .gauge-wrap { display: flex; justify-content: center; padding: 20px 0; }
+  .anxiety-gauge { position: relative; width: 180px; height: 100px; }
+  .chat-area { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; padding: 4px; }
+  .chat-bubble { padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.6; max-width: 90%; }
+  .chat-bubble.ai { background: var(--purple-light); color: var(--text); border-bottom-left-radius: 4px; align-self: flex-start; }
+  .chat-bubble.user { background: linear-gradient(135deg, var(--pink), var(--purple)); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+  .chat-input-row { display: flex; gap: 8px; margin-top: 12px; }
+  .chat-input-row input { flex: 1; padding: 10px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 14px; outline: none; }
+  .chat-input-row input:focus { border-color: var(--purple); }
+  .chat-send { background: var(--purple); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-size: 14px; transition: opacity .2s; }
+  .chat-send:hover { opacity: .85; }
+  .emotion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1.5px solid; cursor: pointer; transition: all .2s; }
+  .chip.calm { background: var(--teal-light); color: var(--teal); border-color: var(--teal); }
+  .chip.anxious { background: var(--amber-light); color: var(--amber); border-color: var(--amber); }
+  .chip.stressed { background: var(--red-light); color: var(--red); border-color: var(--red); }
+  .chip.happy { background: var(--green-light); color: var(--green); border-color: var(--green); }
+  .chip.sad { background: var(--purple-light); color: var(--purple); border-color: var(--purple); }
+
+  /* WORK LIFE */
+  .work-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .work-timer { text-align: center; padding: 20px; }
+  .timer-circle { width: 160px; height: 160px; border-radius: 50%; background: conic-gradient(var(--pink) var(--pct, 60%), #f0e6f0 0); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; position: relative; }
+  .timer-inner { width: 130px; height: 130px; border-radius: 50%; background: white; display: flex; flex-direction: direction; flex-direction: column; align-items: center; justify-content: center; }
+  .timer-val { font-size: 28px; font-weight: 800; color: var(--pink); }
+  .timer-sub { font-size: 12px; color: var(--text2); }
+  .stress-indicators { display: flex; flex-direction: column; gap: 10px; }
+  .stress-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--gray-light); border-radius: 10px; }
+  .stress-item-label { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .stress-meter { display: flex; gap: 4px; }
+  .stress-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .break-timeline { display: flex; gap: 4px; flex-wrap: wrap; margin: 12px 0; }
+  .break-slot { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .break-slot.ok { background: var(--green-light); color: var(--green); }
+  .break-slot.miss { background: var(--red-light); color: var(--red); }
+  .break-slot.next { background: var(--amber-light); color: var(--amber); }
+
+  /* ALERTS */
+  .alerts-list { display: flex; flex-direction: column; gap: 12px; }
+  .alert-item { background: white; border-radius: var(--radius-sm); padding: 16px; border-left: 4px solid; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  .alert-item.critical { border-color: var(--red); }
+  .alert-item.warning { border-color: var(--amber); }
+  .alert-item.info { border-color: var(--blue); }
+  .alert-item.success { border-color: var(--green); }
+  .alert-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .alert-icon.critical { background: var(--red-light); }
+  .alert-icon.warning { background: var(--amber-light); }
+  .alert-icon.info { background: var(--blue-light); }
+  .alert-icon.success { background: var(--green-light); }
+  .alert-content h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .alert-content p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .alert-time { font-size: 11px; color: var(--text2); margin-top: 6px; }
+  .alert-dismiss { margin-left: auto; cursor: pointer; font-size: 18px; color: var(--text2); padding: 4px; transition: color .2s; }
+  .alert-dismiss:hover { color: var(--red); }
+
+  /* LOADING SPINNER */
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--pink-light); border-top-color: var(--pink); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr 1fr; }
+    .dash-grid, .fetus-layout, .mental-grid, .work-grid { grid-template-columns: 1fr; }
+    .metrics-row { grid-template-columns: repeat(2,1fr); }
+    .diet-controls { grid-template-columns: 1fr; }
+    .check-form { grid-template-columns: 1fr; }
+    .submit-row { grid-column: 1; }
+    nav { overflow-x: auto; }
+    .nav-links { gap: 0; }
+    .hero { padding: 32px 24px; }
+  }
+  @media (max-width: 600px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .fetus-info-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* WEEK PROGRESS BAR */
+  .pregnancy-week-bar { display: flex; gap: 2px; margin: 12px 0; }
+  .pw-seg { flex: 1; height: 8px; border-radius: 2px; }
+  .pw-seg.done { background: var(--pink); }
+  .pw-seg.current { background: var(--purple); }
+  .pw-seg.left { background: #e5e7eb; }
+
+  /* TAG */
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .tag.green { background: var(--green-light); color: var(--green); }
+  .tag.red { background: var(--red-light); color: var(--red); }
+  .tag.amber { background: var(--amber-light); color: var(--amber); }
+  .tag.purple { background: var(--purple-light); color: var(--purple); }
+  .tag.blue { background: var(--blue-light); color: var(--blue); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="#" onclick="showPage('home')">
+      <div class="logo-icon">🌸</div>
+      <span class="logo-text">Sthri</span>
+    </a>
+    <div class="nav-links">
+      <a onclick="showPage('home')" class="active" id="nav-home">Home</a>
+      <a onclick="showPage('dashboard')" id="nav-dashboard">Dashboard</a>
+      <a onclick="showPage('daily')" id="nav-daily">Daily Check</a>
+      <a onclick="showPage('fetus')" id="nav-fetus">Fetus Tracker</a>
+      <a onclick="showPage('diet')" id="nav-diet">Diet Planner</a>
+      <a onclick="showPage('mental')" id="nav-mental">Mental Health</a>
+      <a onclick="showPage('work')" id="nav-work">Work Life</a>
+      <a onclick="showPage('alerts')" id="nav-alerts">Alerts</a>
+    </div>
+    <div class="nav-right">
+      <div class="alert-badge" onclick="showPage('alerts')" title="3 alerts">3</div>
+      <button class="btn-primary" onclick="showPage('daily')">🌸 Daily Check-in</button>
+      <button class="btn-outline" onclick="window.location.href='login.html'" style="padding: 9px 16px; margin-left: 8px;">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div>
+      <div class="hero-tag">🤖 AI-Powered Maternal Care</div>
+      <h1>Your Smart<br/><span>Pregnancy Companion</span><br/>by Sthri</h1>
+      <p>Sthri uses AI to monitor your health, track your baby's development, plan nutrition, and protect your wellbeing — all in one place.</p>
+      <div class="hero-ctas">
+        <button class="btn-primary" onclick="showPage('daily')">🌸 Start Daily Check-in</button>
+        <button class="btn-outline" onclick="showPage('dashboard')">📊 View Dashboard</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="stat-card">
+        <div class="icon" style="background:#fce4f0">🤱</div>
+        <div class="val" style="color:var(--pink)">28</div>
+        <div class="lbl">Weeks Pregnant</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:70%"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="icon" style="background:#ede9fe">🧠</div>
+        <div class="val" style="color:var(--purple)">72%</div>
+        <div class="lbl">Mental Wellness</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:72%;background:linear-gradient(90deg,var(--purple),var(--pink))"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="icon" style="background:#ccfbf1">🥗</div>
+        <div class="val" style="color:var(--teal)">1840</div>
+        <div class="lbl">kcal Today</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:82%;background:linear-gradient(90deg,var(--teal),var(--green))"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="icon" style="background:#fef3c7">💤</div>
+        <div class="val" style="color:var(--amber)">7.5h</div>
+        <div class="lbl">Sleep Last Night</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:88%;background:linear-gradient(90deg,var(--amber),#f59e0b)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>Everything You Need 🌸</h2>
+    <p>Six intelligent modules designed for working moms</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card" onclick="showPage('daily')" style="--accent:linear-gradient(90deg,var(--pink),var(--purple))">
+      <div class="feature-icon" style="background:var(--pink-light)">📋</div>
+      <h3>Daily Health Check</h3>
+      <p>1-minute AI-powered daily wellness log. Track mood, sleep, and nutrition. Get instant personalized insights.</p>
+      <span class="feature-link">Open Check-in →</span>
+    </div>
+    <div class="feature-card" onclick="showPage('fetus')" style="--accent:linear-gradient(90deg,#a855f7,var(--pink))">
+      <div class="feature-icon" style="background:var(--purple-light)">👶</div>
+      <h3>Fetus Impact Visualizer</h3>
+      <p>See how your daily habits affect your baby's development. Week-by-week visual milestones with AI impact analysis.</p>
+      <span class="feature-link">Track Baby →</span>
+    </div>
+    <div class="feature-card" onclick="showPage('diet')" style="--accent:linear-gradient(90deg,var(--teal),var(--green))">
+      <div class="feature-icon" style="background:var(--teal-light)">🥗</div>
+      <h3>Smart Diet Planner</h3>
+      <p>AI-curated meal plans with pregnancy superfoods. Trimester-specific nutrition tailored to your preferences.</p>
+      <span class="feature-link">Plan Meals →</span>
+    </div>
+    <div class="feature-card" onclick="showPage('mental')" style="--accent:linear-gradient(90deg,#6366f1,var(--purple))">
+      <div class="feature-icon" style="background:#e0e7ff">🧘</div>
+      <h3>Mental Health Monitor</h3>
+      <p>AI-driven anxiety and mood detection. Daily emotional check-ins with a compassionate AI therapist companion.</p>
+      <span class="feature-link">Check Wellness →</span>
+    </div>
+    <div class="feature-card" onclick="showPage('work')" style="--accent:linear-gradient(90deg,var(--blue),#6366f1)">
+      <div class="feature-icon" style="background:var(--blue-light)">💼</div>
+      <h3>Work-Life Detection</h3>
+      <p>Monitors sitting hours, break frequency, and stress levels. Smart reminders to protect you and your baby at work.</p>
+      <span class="feature-link">Work Check →</span>
+    </div>
+    <div class="feature-card" onclick="showPage('alerts')" style="--accent:linear-gradient(90deg,var(--red),var(--amber))">
+      <div class="feature-icon" style="background:var(--red-light)">🔔</div>
+      <h3>Smart Alerts</h3>
+      <p>Real-time health alerts powered by AI anomaly detection. Critical, warning, and informational notifications.</p>
+      <span class="feature-link">View Alerts →</span>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <h2 style="font-size:26px;font-weight:800">Good Morning, Priya 🌸</h2>
+      <p style="color:var(--text2)">Week 28 · Third Trimester · 12 weeks to go</p>
+      <p style="color:var(--teal);font-size:13px;font-weight:700;margin-top:6px;display:flex;align-items:center;gap:6px;"><span>🏥</span> Securely monitored by City General Hospital</p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <span class="tag purple">🤖 AI Active</span>
+      <span class="tag green">✓ Synced</span>
+    </div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric">
+      <div class="m-val" style="color:var(--pink)">28</div>
+      <div class="m-lbl">Weeks</div>
+      <div class="m-trend" style="color:var(--green)">▲ On Track</div>
+    </div>
+    <div class="metric">
+      <div class="m-val" style="color:var(--purple)">72</div>
+      <div class="m-lbl">Wellness Score</div>
+      <div class="m-trend" style="color:var(--green)">▲ +5 today</div>
+    </div>
+    <div class="metric">
+      <div class="m-val" style="color:var(--teal)">1840</div>
+      <div class="m-lbl">kcal Today</div>
+      <div class="m-trend" style="color:var(--amber)">● 160 left</div>
+    </div>
+    <div class="metric">
+      <div class="m-val" style="color:var(--amber)">3</div>
+      <div class="m-lbl">Active Alerts</div>
+      <div class="m-trend" style="color:var(--red)">▼ Check Now</div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="dash-main">
+      <div class="card">
+        <h3>📈 Weekly Health Trends <span class="card-badge">AI Analyzed</span></h3>
+        <canvas id="trendChart" height="120"></canvas>
+      </div>
+      <div class="card">
+        <h3>🌸 Pregnancy Progress</h3>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:14px;color:var(--text2)">Week 28 of 40</span>
+          <span style="font-size:14px;font-weight:700;color:var(--pink)">70% Complete</span>
+        </div>
+        <div class="pregnancy-week-bar" id="weekBar"></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
+          <div style="text-align:center;padding:12px;background:var(--pink-light);border-radius:10px">
+            <div style="font-size:20px;font-weight:800;color:var(--pink)">12</div>
+            <div style="font-size:12px;color:var(--text2)">Weeks Left</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--purple-light);border-radius:10px">
+            <div style="font-size:20px;font-weight:800;color:var(--purple)">3rd</div>
+            <div style="font-size:12px;color:var(--text2)">Trimester</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--teal-light);border-radius:10px">
+            <div style="font-size:20px;font-weight:800;color:var(--teal)">Jun 15</div>
+            <div style="font-size:12px;color:var(--text2)">Due Date</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-side">
+      <div class="card">
+        <h3>🎯 Today's Goals</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div id="goal-daily" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:var(--green-light);cursor:pointer" onclick="toggleGoal('daily')">
+            <span style="font-size:18px">✅</span>
+            <div><div style="font-size:14px;font-weight:600">Daily Check-in</div><div style="font-size:12px;color:var(--text2)">Completed</div></div>
+          </div>
+          <div id="goal-water" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:var(--gray-light);cursor:pointer" onclick="toggleGoal('water')">
+            <span style="font-size:18px">⭕</span>
+            <div><div style="font-size:14px;font-weight:600">Drink 8 glasses</div><div style="font-size:12px;color:var(--text2)">5/8 done</div></div>
+          </div>
+          <div id="goal-walk" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:var(--gray-light);cursor:pointer" onclick="toggleGoal('walk')">
+            <span style="font-size:18px">⭕</span>
+            <div><div style="font-size:14px;font-weight:600">15-min walk</div><div style="font-size:12px;color:var(--text2)">Not started</div></div>
+          </div>
+          <div id="goal-prenatal" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:var(--green-light);cursor:pointer" onclick="toggleGoal('prenatal')">
+            <span style="font-size:18px">✅</span>
+            <div><div style="font-size:14px;font-weight:600">Prenatal vitamins</div><div style="font-size:12px;color:var(--text2)">Taken</div></div>
+          </div>
+          <div id="goal-break" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:var(--amber-light);cursor:pointer" onclick="toggleGoal('break')">
+            <span style="font-size:18px">⚠️</span>
+            <div><div style="font-size:14px;font-weight:600">Take work breaks</div><div style="font-size:12px;color:var(--text2)">2/4 breaks taken</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🤖 AI Insight of the Day</h3>
+        <div style="background:linear-gradient(135deg,var(--purple-light),var(--pink-light));border-radius:10px;padding:14px;border-left:4px solid var(--purple)">
+          <p style="font-size:14px;line-height:1.7">Your sleep improved by <strong>12%</strong> this week! Your baby is in a critical brain development phase. Keep the 10pm bedtime and try left-side sleeping for better blood flow. 🧠💤</p>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-top:12px;font-size:13px" onclick="showPage('mental')">Chat with AI Companion →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DAILY CHECK -->
+<div class="page" id="page-daily">
+  <div style="margin-bottom:24px">
+    <h2 style="font-size:26px;font-weight:800">Daily Health Check-in 📋</h2>
+    <p style="color:var(--text2)">Takes just 60 seconds · AI analyzes your input instantly</p>
+  </div>
+  <div class="card" style="max-width:800px">
+    <h3>🌸 How are you feeling today?</h3>
+    <div class="mood-grid" style="margin-bottom:24px">
+      <button class="mood-btn" onclick="selectMood(this,'😞')">😞<div style="font-size:10px;margin-top:4px;color:var(--text2)">Sad</div></button>
+      <button class="mood-btn" onclick="selectMood(this,'😟')">😟<div style="font-size:10px;margin-top:4px;color:var(--text2)">Anxious</div></button>
+      <button class="mood-btn" onclick="selectMood(this,'😐')">😐<div style="font-size:10px;margin-top:4px;color:var(--text2)">Neutral</div></button>
+      <button class="mood-btn" onclick="selectMood(this,'😊')">😊<div style="font-size:10px;margin-top:4px;color:var(--text2)">Good</div></button>
+      <button class="mood-btn selected" onclick="selectMood(this,'😄')">😄<div style="font-size:10px;margin-top:4px;color:var(--text2)">Great</div></button>
+    </div>
+
+    <div class="check-form">
+      <div class="form-group">
+        <label>💤 Sleep Hours Last Night</label>
+        <div class="slider-wrap">
+          <input type="range" min="2" max="12" value="7" step="0.5" id="sleepSlider" oninput="document.getElementById('sleepVal').textContent=this.value+'h'"/>
+          <div class="slider-labels"><span>2h</span><span id="sleepVal" style="color:var(--pink);font-weight:700">7h</span><span>12h</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>💧 Water Intake</label>
+        <div class="slider-wrap">
+          <input type="range" min="0" max="12" value="6" id="waterSlider" oninput="document.getElementById('waterVal').textContent=this.value+' glasses'"/>
+          <div class="slider-labels"><span>0</span><span id="waterVal" style="color:var(--blue);font-weight:700">6 glasses</span><span>12</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>🍽️ Food Intake Quality</label>
+        <select id="foodQuality">
+          <option value="excellent">🥗 Excellent – Balanced meals</option>
+          <option value="good" selected>✅ Good – Mostly healthy</option>
+          <option value="fair">⚠️ Fair – Some junk food</option>
+          <option value="poor">❌ Poor – Mostly processed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>😰 Stress Level</label>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="10" value="4" id="stressSlider" oninput="document.getElementById('stressVal').textContent=this.value+'/10'"/>
+          <div class="slider-labels"><span>Low</span><span id="stressVal" style="color:var(--amber);font-weight:700">4/10</span><span>High</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>🤒 Any Symptoms?</label>
+        <select id="symptoms">
+          <option>None today</option>
+          <option>Nausea / Morning sickness</option>
+          <option>Back pain</option>
+          <option>Swollen feet</option>
+          <option>Headache</option>
+          <option>Heartburn</option>
+          <option>Fatigue</option>
+          <option>Shortness of breath</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🏃 Exercise Today</label>
+        <select id="exercise">
+          <option>None</option>
+          <option>Light walk (10-15 min)</option>
+          <option selected>Moderate walk (30 min)</option>
+          <option>Prenatal yoga</option>
+          <option>Swimming</option>
+          <option>Stretching only</option>
+        </select>
+      </div>
+      <div class="submit-row">
+        <button class="btn-primary" style="padding:12px 40px;font-size:16px" onclick="submitDailyCheck()">🤖 Analyze with AI →</button>
+      </div>
+    </div>
+
+    <div id="aiDailyResult" style="display:none"></div>
+  </div>
+</div>
+
+<!-- FETUS TRACKER -->
+<div class="page" id="page-fetus">
+  <div style="margin-bottom:24px">
+    <h2 style="font-size:26px;font-weight:800">Fetus Impact Visualizer 👶</h2>
+    <p style="color:var(--text2)">See your baby's development and how your choices impact growth</p>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <p style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text2)">Select Pregnancy Week:</p>
+    <div class="week-selector" id="weekSelector"></div>
+  </div>
+
+  <div class="fetus-layout">
+    <div>
+      <div class="card">
+        <h3 id="fetusWeekTitle">Week 28 – Your Baby 👶</h3>
+        <div class="fetus-svg-wrap">
+          <div id="fetusSvgContainer"></div>
+        </div>
+        <div class="fetus-info-grid" id="fetusInfoGrid"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>🧬 Development Milestones</h3>
+        <div id="fetusMilestones" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <h3>⚡ Your Habits Impact <span class="card-badge">AI Insights</span></h3>
+        <div class="fetus-impacts" id="fetusImpacts"></div>
+        <button class="btn-primary" style="width:100%;margin-top:16px" onclick="getFetusAIInsight()">🤖 Get Detailed AI Analysis →</button>
+        <div id="fetusAiResult" style="margin-top:16px;display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIET PLANNER -->
+<div class="page" id="page-diet">
+  <div style="margin-bottom:24px">
+    <h2 style="font-size:26px;font-weight:800">Smart Diet Planner 🥗</h2>
+    <p style="color:var(--text2)">AI-curated nutrition plans for you and your baby</p>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>⚙️ Customize Your Plan <span class="card-badge">AI Powered</span></h3>
+    <div class="diet-controls">
+      <div class="form-group">
+        <label>🤰 Trimester</label>
+        <select id="trimesterSel" onchange="generateDietPlan()">
+          <option>First (Weeks 1–12)</option>
+          <option>Second (Weeks 13–26)</option>
+          <option selected>Third (Weeks 27–40)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>🍽️ Diet Preference</label>
+        <select id="dietPref" onchange="generateDietPlan()">
+          <option>Vegetarian</option>
+          <option selected>Non-vegetarian</option>
+          <option>Vegan</option>
+          <option>South Indian</option>
+          <option>North Indian</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>⚠️ Restrictions</label>
+        <select id="restrictions" onchange="generateDietPlan()">
+          <option>None</option>
+          <option>Gluten-free</option>
+          <option>Dairy-free</option>
+          <option>Nut allergy</option>
+          <option>Low sugar</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="getAIDietPlan()" style="font-size:14px">🤖 Generate AI Meal Plan →</button>
+    <div id="aiDietResult" style="margin-top:16px;display:none"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>📅 Today's Meal Plan</h3>
+    <div class="meal-plan" id="mealPlanContainer"></div>
+  </div>
+
+  <div class="card">
+    <h3>🧪 Nutrient Tracker</h3>
+    <div class="nutrient-bar-wrap" id="nutrientBars"></div>
+  </div>
+</div>
+
+<!-- MENTAL HEALTH -->
+<div class="page" id="page-mental">
+  <div style="margin-bottom:24px">
+    <h2 style="font-size:26px;font-weight:800">Mental Health Monitor 🧘</h2>
+    <p style="color:var(--text2)">AI-powered emotional support and anxiety detection</p>
+  </div>
+  <div class="mental-grid">
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h3>📊 Wellness Overview <span class="card-badge">AI Detected</span></h3>
+        <div class="gauge-wrap">
+          <canvas id="mentalGaugeChart" width="220" height="130"></canvas>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div style="text-align:center;padding:12px;background:var(--green-light);border-radius:10px">
+            <div style="font-size:20px;font-weight:800;color:var(--green)">72%</div>
+            <div style="font-size:11px;color:var(--text2)">Wellness</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--amber-light);border-radius:10px">
+            <div style="font-size:20px;font-weight:800;color:var(--amber)">28%</div>
+            <div style="font-size:11px;color:var(--text2)">Anxiety</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--blue-light);border-radius:10px">
+            <div style="font-size:20px;font-weight:800;color:var(--blue)">Mild</div>
+            <div style="font-size:11px;color:var(--text2)">Stress</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>😌 How are you feeling now?</h3>
+        <div class="emotion-chips">
+          <span class="chip calm" onclick="selectEmotion('calm')">😌 Calm</span>
+          <span class="chip anxious" onclick="selectEmotion('anxious')">😰 Anxious</span>
+          <span class="chip stressed" onclick="selectEmotion('stressed')">😤 Stressed</span>
+          <span class="chip happy" onclick="selectEmotion('happy')">😊 Happy</span>
+          <span class="chip sad" onclick="selectEmotion('sad')">😢 Sad</span>
+        </div>
+        <canvas id="moodWeekChart" height="100"></canvas>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="height:calc(100% - 0px)">
+        <h3>🤖 AI Companion Chat <span class="card-badge">Powered by Sthri AI</span></h3>
+        <div class="chat-area" id="chatArea">
+          <div class="chat-bubble ai">Hello Priya! 🌸 I'm your Sthri AI companion. I'm here to support your emotional wellbeing through pregnancy. How are you feeling today?</div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Share how you're feeling..." onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="chat-send" onclick="sendChat()">Send →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORK LIFE -->
+<div class="page" id="page-work">
+  <div style="margin-bottom:24px">
+    <h2 style="font-size:26px;font-weight:800">Work-Life Detection 💼</h2>
+    <p style="color:var(--text2)">AI monitors your work patterns to protect you and your baby</p>
+  </div>
+  <div class="work-grid">
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h3>⏱️ Sitting Time Today</h3>
+        <div class="work-timer">
+          <div class="timer-circle" style="--pct:216deg">
+            <div class="timer-inner">
+              <div class="timer-val">4.5h</div>
+              <div class="timer-sub">of 6h max</div>
+            </div>
+          </div>
+          <p style="font-size:14px;color:var(--amber);font-weight:600">⚠️ 75% of daily safe limit</p>
+          <p style="font-size:13px;color:var(--text2);margin-top:6px">AI recommends a break in 15 min</p>
+        </div>
+      </div>
+      <div class="card">
+        <h3>☕ Break Schedule</h3>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Every 90 minutes — checked hourly</p>
+        <div class="break-timeline">
+          <div class="break-slot ok">9AM</div>
+          <div class="break-slot ok">10:30</div>
+          <div class="break-slot miss">12PM</div>
+          <div class="break-slot ok">1:30</div>
+          <div class="break-slot next">3PM</div>
+          <div class="break-slot" style="background:var(--gray-light);color:var(--text2)">4:30</div>
+          <div class="break-slot" style="background:var(--gray-light);color:var(--text2)">6PM</div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:5px;font-size:12px"><div style="width:12px;height:12px;background:var(--green-light);border-radius:3px;border:1px solid var(--green)"></div>Taken</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:12px"><div style="width:12px;height:12px;background:var(--red-light);border-radius:3px;border:1px solid var(--red)"></div>Missed</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:12px"><div style="width:12px;height:12px;background:var(--amber-light);border-radius:3px;border:1px solid var(--amber)"></div>Next</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h3>📊 Stress Indicators <span class="card-badge">AI Detected</span></h3>
+        <div class="stress-indicators">
+          <div class="stress-item">
+            <span class="stress-item-label">😓 Work Stress</span>
+            <div class="stress-meter">
+              <div class="stress-dot" style="background:var(--red)"></div>
+              <div class="stress-dot" style="background:var(--red)"></div>
+              <div class="stress-dot" style="background:var(--red)"></div>
+              <div class="stress-dot" style="background:var(--amber)"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+            </div>
+          </div>
+          <div class="stress-item">
+            <span class="stress-item-label">📧 Email Overload</span>
+            <div class="stress-meter">
+              <div class="stress-dot" style="background:var(--amber)"></div>
+              <div class="stress-dot" style="background:var(--amber)"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+            </div>
+          </div>
+          <div class="stress-item">
+            <span class="stress-item-label">🖥️ Screen Time</span>
+            <div class="stress-meter">
+              <div class="stress-dot" style="background:var(--red)"></div>
+              <div class="stress-dot" style="background:var(--red)"></div>
+              <div class="stress-dot" style="background:var(--red)"></div>
+              <div class="stress-dot" style="background:var(--red)"></div>
+              <div class="stress-dot" style="background:var(--amber)"></div>
+            </div>
+          </div>
+          <div class="stress-item">
+            <span class="stress-item-label">🫀 Heart Rate</span>
+            <div class="stress-meter">
+              <div class="stress-dot" style="background:var(--green)"></div>
+              <div class="stress-dot" style="background:var(--green)"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+            </div>
+          </div>
+          <div class="stress-item">
+            <span class="stress-item-label">💤 Rest Quality</span>
+            <div class="stress-meter">
+              <div class="stress-dot" style="background:var(--blue)"></div>
+              <div class="stress-dot" style="background:var(--blue)"></div>
+              <div class="stress-dot" style="background:var(--blue)"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+              <div class="stress-dot" style="background:#e5e7eb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🤖 AI Work-Life Recommendations</h3>
+        <div id="workAiResult">
+          <div style="background:var(--blue-light);border-left:4px solid var(--blue);border-radius:8px;padding:14px;margin-bottom:10px">
+            <p style="font-size:14px;line-height:1.6;color:var(--text)">🪑 <strong>Posture Alert:</strong> You've been sitting for 90 minutes. Stand up and do 5 minutes of gentle stretching. This improves blood flow to your placenta.</p>
+          </div>
+          <div style="background:var(--amber-light);border-left:4px solid var(--amber);border-radius:8px;padding:14px;margin-bottom:10px">
+            <p style="font-size:14px;line-height:1.6;color:var(--text)">⏰ <strong>Screen Time:</strong> Your screen exposure is high today (5.2h). Take a 10-minute eye break and look at a distant object every 20 minutes.</p>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-top:8px" onclick="getWorkAIAdvice()">🤖 Get AI Work-Life Advice →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTS -->
+<div class="page" id="page-alerts">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <h2 style="font-size:26px;font-weight:800">Smart Alerts 🔔</h2>
+      <p style="color:var(--text2)">AI-powered health notifications and reminders</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <span class="tag red">3 Critical</span>
+      <span class="tag amber">2 Warnings</span>
+      <span class="tag blue">4 Info</span>
+    </div>
+  </div>
+  <div class="alerts-list" id="alertsList"></div>
+</div>
+
+<script>
+const ALERTS_DATA = [
+  {type:'critical',icon:'🩸',title:'Iron Level Alert',msg:'Your symptoms suggest possible iron deficiency. Fatigue + headache pattern detected. Please consult your doctor and consider an iron test.',time:'10 minutes ago'},
+  {type:'critical',icon:'🧘',title:'High Stress Detected',msg:'AI detected elevated stress patterns over the past 3 days. Cortisol spikes can affect fetal development. Immediate breathing exercises recommended.',time:'45 minutes ago'},
+  {type:'warning',icon:'💧',title:'Low Water Intake',msg:'You\'ve only had 5 glasses today. Dehydration in the third trimester can cause contractions. Drink 3 more glasses before 6pm.',time:'1 hour ago'},
+  {type:'critical',icon:'🪑',title:'Extended Sitting Period',msg:'You have been sitting for 2.5 hours continuously. Please take a 5-minute standing break to improve circulation and reduce swelling risk.',time:'2 hours ago'},
+  {type:'warning',icon:'🌙',title:'Sleep Pattern Change',msg:'Your average sleep has dropped to 6.8h this week (down from 8h). Consistent sleep is vital for fetal brain development in Week 28.',time:'This morning'},
+  {type:'info',icon:'💊',title:'Prenatal Vitamin Reminder',msg:'Time to take your folic acid and iron supplement. Best absorbed with Vitamin C — try a small glass of orange juice.',time:'9:00 AM'},
+  {type:'info',icon:'👨‍⚕️',title:'Doctor Appointment',msg:'Your next prenatal check-up is in 5 days (March 28). Don\'t forget to track fetal movements beforehand.',time:'Yesterday'},
+  {type:'success',icon:'🏃',title:'Exercise Goal Met',msg:'Great job! You completed your 30-minute prenatal walk today. Regular exercise reduces labor complications by up to 30%.',time:'2 hours ago'},
+  {type:'info',icon:'🧬',title:'Glucose Screening Due',msg:'You\'re at week 28 — it\'s time to schedule your gestational diabetes screening (OGTT). Call your OB to book.',time:'3 hours ago'},
+];
+
+function renderAlerts() {
+  const list = document.getElementById('alertsList');
+  list.innerHTML = ALERTS_DATA.map((a,i) => `
+    <div class="alert-item ${a.type}" id="alert-${i}">
+      <div class="alert-icon ${a.type}">${a.icon}</div>
+      <div class="alert-content" style="flex:1">
+        <h4>${a.title}</h4>
+        <p>${a.msg}</p>
+        <div class="alert-time">🕐 ${a.time}</div>
+      </div>
+      <div class="alert-dismiss" onclick="dismissAlert(${i})" title="Dismiss">×</div>
+    </div>
+  `).join('');
+}
+
+function dismissAlert(i) {
+  document.getElementById('alert-'+i).style.display='none';
+}
+
+// PAGE NAV
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const navEl = document.getElementById('nav-'+id);
+  if(navEl) navEl.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// MOOD
+let selectedMood = '😄';
+function selectMood(btn, mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedMood = mood;
+}
+
+// GOALS
+function toggleGoal(id) {
+  const el = document.getElementById('goal-'+id);
+  const icon = el.querySelector('span');
+  if(icon.textContent === '✅') { icon.textContent = '⭕'; el.style.background='var(--gray-light)'; }
+  else if(icon.textContent === '⭕') { icon.textContent = '✅'; el.style.background='var(--green-light)'; }
+}
+
+// DAILY CHECK AI
+async function submitDailyCheck() {
+  const sleep = document.getElementById('sleepSlider').value;
+  const water = document.getElementById('waterSlider').value;
+  const food = document.getElementById('foodQuality').value;
+  const stress = document.getElementById('stressSlider').value;
+  const symptoms = document.getElementById('symptoms').value;
+  const exercise = document.getElementById('exercise').value;
+
+  const resultDiv = document.getElementById('aiDailyResult');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = `<div class="ai-result"><h4>🤖 AI is analyzing your health data...</h4><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:`You are MaMaCare, a compassionate AI maternal health companion for a working woman at week 28 of pregnancy. Analyze this daily health check-in and give a warm, specific, actionable response in 3-4 sentences. Be encouraging but flag any concerns.
+
+Daily data:
+- Mood: ${selectedMood}
+- Sleep: ${sleep} hours
+- Water: ${water} glasses
+- Food quality: ${food}
+- Stress level: ${stress}/10
+- Symptoms: ${symptoms}
+- Exercise: ${exercise}
+
+Provide: 1) Overall health status for today, 2) One immediate action to take, 3) How today's habits affect baby at week 28, 4) An encouraging closing note. Keep it warm, personal, and under 120 words.`}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content[0].text;
+    resultDiv.innerHTML = `<div class="ai-result"><h4>🤖 Your AI Health Analysis</h4><p>${text}</p></div>`;
+  } catch(e) {
+    resultDiv.innerHTML = `<div class="ai-result"><h4>🤖 Health Summary</h4><p>Based on your inputs: Sleep of ${sleep}h is ${parseFloat(sleep)>=7?'great':'below recommended 8h for pregnancy'}. Water intake of ${water} glasses is ${parseInt(water)>=8?'excellent':'low — aim for 8-10 glasses'. replace("'","'")}. Stress at ${stress}/10 — ${parseInt(stress)<=4?'well managed!':'consider a 10-minute breathing exercise'}. Your baby at week 28 is developing rapidly — keep it up! 🌸</p></div>`;
+  }
+}
+
+// FETUS DATA
+const fetusData = {
+  8:  {size:'Raspberry',weight:'1g',length:'1.6cm',milestones:['Heart beating','Facial features forming','Arm/leg buds'],impacts:[{type:'ok',text:'Folic acid critical now for neural tube'},{type:'warn',text:'Avoid caffeine — impacts cell division'},{type:'ok',text:'Rest supports rapid organ formation'}]},
+  12: {size:'Lime',weight:'14g',length:'5.4cm',milestones:['All organs formed','Reflexes developing','Can make a fist'],impacts:[{type:'ok',text:'Morning sickness easing — eat small meals'},{type:'warn',text:'Stress hormones cross placenta — stay calm'},{type:'ok',text:'Hydration supports amniotic fluid'}]},
+  16: {size:'Avocado',weight:'100g',length:'11.6cm',milestones:['Can hear sounds','Eyes moving','Skeleton hardening'],impacts:[{type:'ok',text:'Talk and sing — baby can now hear!'},{type:'warn',text:'Iron intake critical for blood production'},{type:'ok',text:'Calcium helps strengthen baby\'s bones'}]},
+  20: {size:'Banana',weight:'300g',length:'16.4cm',milestones:['Kicks felt','Sleep cycles','Vernix coating forms'],impacts:[{type:'ok',text:'Regular kicks tracking important now'},{type:'warn',text:'Avoid prolonged standing — causes swelling'},{type:'ok',text:'DHA-rich foods support brain development'}]},
+  24: {size:'Corn',weight:'600g',length:'21cm',milestones:['Lungs practicing breathing','Brain growth accelerates','Face fully formed'],impacts:[{type:'ok',text:'Deep breathing helps baby\'s lung practice'},{type:'danger',text:'High stress linked to preterm risk — prioritize rest'},{type:'ok',text:'Protein intake builds baby\'s muscles'}]},
+  28: {size:'Eggplant',weight:'1kg',length:'25cm',milestones:['Eyes open!','Brain developing fast','Fat deposits building','Can dream!'],impacts:[{type:'ok',text:'Sleep on left side — improves blood flow to baby'},{type:'warn',text:'Screen time before bed disrupts baby\'s rhythm'},{type:'danger',text:'Sitting >2h reduces circulation — move every hour'},{type:'ok',text:'Omega-3 is critical for baby\'s eye development'}]},
+  32: {size:'Squash',weight:'1.7kg',length:'28cm',milestones:['Practicing sucking','Rapid weight gain','Skull still soft'],impacts:[{type:'ok',text:'Calcium & Vit D critical for bone density'},{type:'warn',text:'Backpain normal — prenatal yoga helps'},{type:'ok',text:'Smaller frequent meals ease heartburn'}]},
+  36: {size:'Honeydew',weight:'2.6kg',length:'33cm',milestones:['Head may engage','Lungs nearly ready','Full-term soon!'],impacts:[{type:'ok',text:'Light walking prepares body for labor'},{type:'warn',text:'Watch for swelling — could indicate preeclampsia'},{type:'ok',text:'Rest as much as possible — big day coming!'}]},
+};
+
+const weekList = [8,12,16,20,24,28,32,36];
+let currentWeek = 28;
+
+function buildWeekSelector() {
+  const sel = document.getElementById('weekSelector');
+  sel.innerHTML = weekList.map(w => `<button class="week-btn${w===currentWeek?' active':''}" onclick="setWeek(${w})">Week ${w}</button>`).join('');
+}
+
+function setWeek(w) {
+  currentWeek = w;
+  buildWeekSelector();
+  renderFetusData();
+}
+
+function getFetusSize(w) {
+  const sizes = {8:30,12:45,16:60,20:80,24:100,28:125,32:145,36:160};
+  return sizes[w] || 100;
+}
+
+function renderFetusData() {
+  const d = fetusData[currentWeek];
+  if(!d) return;
+  document.getElementById('fetusWeekTitle').textContent = `Week ${currentWeek} – Your Baby is a ${d.size}! 👶`;
+
+  const sz = getFetusSize(currentWeek);
+  document.getElementById('fetusSvgContainer').innerHTML = `
+    <svg width="${sz+40}" height="${sz+60}" viewBox="0 0 ${sz+40} ${sz+60}" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="bg${currentWeek}" cx="50%" cy="40%"><stop offset="0%" stop-color="#fce4f0"/><stop offset="100%" stop-color="#ede9fe"/></radialGradient></defs>
+      <ellipse cx="${(sz+40)/2}" cy="${sz/2+10}" rx="${sz/2}" ry="${sz*0.55}" fill="url(#bg${currentWeek})" stroke="#e84393" stroke-width="2"/>
+      <circle cx="${(sz+40)/2}" cy="${sz*0.22+10}" r="${sz*0.18}" fill="#f9afd1" stroke="#e84393" stroke-width="1.5"/>
+      <circle cx="${(sz+40)/2-sz*0.06}" cy="${sz*0.19+10}" r="${sz*0.025}" fill="#7c3aed"/>
+      <circle cx="${(sz+40)/2+sz*0.06}" cy="${sz*0.19+10}" r="${sz*0.025}" fill="#7c3aed"/>
+      <path d="M${(sz+40)/2-sz*0.05} ${sz*0.27+10} Q${(sz+40)/2} ${sz*0.32+10} ${(sz+40)/2+sz*0.05} ${sz*0.27+10}" stroke="#e84393" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <text x="${(sz+40)/2}" y="${sz+55}" text-anchor="middle" font-size="13" fill="#7c3aed" font-weight="600">${d.size} · ${d.length}</text>
+    </svg>`;
+
+  document.getElementById('fetusInfoGrid').innerHTML = `
+    <div class="fetus-stat"><div class="fs-label">Size</div><div class="fs-value" style="color:var(--pink)">${d.size}</div></div>
+    <div class="fetus-stat"><div class="fs-label">Weight</div><div class="fs-value" style="color:var(--purple)">${d.weight}</div></div>
+    <div class="fetus-stat"><div class="fs-label">Length</div><div class="fs-value" style="color:var(--teal)">${d.length}</div></div>
+    <div class="fetus-stat"><div class="fs-label">Week</div><div class="fs-value" style="color:var(--amber)">${currentWeek}/40</div></div>`;
+
+  document.getElementById('fetusMilestones').innerHTML = d.milestones.map(m => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--green-light);border-radius:8px">
+      <span style="color:var(--green);font-size:16px">✓</span>
+      <span style="font-size:14px;font-weight:500">${m}</span>
+    </div>`).join('');
+
+  document.getElementById('fetusImpacts').innerHTML = d.impacts.map(i => `
+    <div class="impact-item ${i.type}">
+      <span style="font-size:18px">${i.type==='ok'?'✅':i.type==='warn'?'⚠️':'🚨'}</span>
+      <span style="font-size:14px;line-height:1.5">${i.text}</span>
+    </div>`).join('');
+
+  document.getElementById('fetusAiResult').style.display='none';
+}
+
+async function getFetusAIInsight() {
+  const d = fetusData[currentWeek];
+  const resultDiv = document.getElementById('fetusAiResult');
+  resultDiv.style.display='block';
+  resultDiv.innerHTML=`<div class="ai-result"><h4>🤖 Analyzing week ${currentWeek} development...</h4><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`You are MaMaCare AI. Give a warm, specific 3-4 sentence insight for a working mother at week ${currentWeek} of pregnancy. Baby is the size of a ${d.size}, weighs ${d.weight}. Cover: most exciting development happening this week, one specific habit to optimize, and one thing to avoid. Keep it under 100 words, warm and encouraging.`}]})});
+    const data = await res.json();
+    resultDiv.innerHTML=`<div class="ai-result"><h4>🤖 Week ${currentWeek} AI Insight</h4><p>${data.content[0].text}</p></div>`;
+  } catch(e) {
+    resultDiv.innerHTML=`<div class="ai-result"><h4>🤖 Week ${currentWeek} Insight</h4><p>At week ${currentWeek}, your baby (${d.size}-sized) is going through exciting changes: ${d.milestones.join(', ')}. Focus on ${d.impacts[0].text.toLowerCase()}. You're doing amazingly! 🌸</p></div>`;
+  }
+}
+
+// DIET PLAN
+const mealPlans = {
+  third: {
+    breakfast: [{name:'Oatmeal with chia seeds & berries',kcal:'320 kcal',note:'High iron + fiber'},{name:'Boiled eggs (2) + whole grain toast',kcal:'280 kcal',note:'Protein + choline'}],
+    lunch: [{name:'Grilled salmon with quinoa & spinach salad',kcal:'520 kcal',note:'DHA omega-3 + iron'},{name:'Lentil soup with brown rice',kcal:'420 kcal',note:'Plant protein + folate'}],
+    dinner: [{name:'Chicken curry with fortified rice + veggies',kcal:'480 kcal',note:'Complete protein'},{name:'Paneer palak with chapati',kcal:'380 kcal',note:'Calcium + iron'}],
+    snacks: [{name:'Greek yogurt + walnuts + banana',kcal:'220 kcal',note:'Probiotics + DHA'},{name:'Hummus with carrot sticks',kcal:'150 kcal',note:'Folate + fiber'}]
+  }
+};
+
+function generateDietPlan() {
+  const plan = mealPlans.third;
+  document.getElementById('mealPlanContainer').innerHTML = ['breakfast','lunch','dinner','snacks'].map(meal => `
+    <div class="meal-section">
+      <div class="meal-header ${meal}">${{breakfast:'☀️ Breakfast',lunch:'🌤️ Lunch',dinner:'🌙 Dinner',snacks:'🍎 Snacks'}[meal]}</div>
+      <div class="meal-items">${plan[meal].map(item => `
+        <div class="meal-item">
+          <div>
+            <div class="meal-item-name">${item.name}</div>
+            <div class="meal-item-info">${item.note}</div>
+          </div>
+          <span class="tag green">${item.kcal}</span>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  const nutrients = [{name:'Iron',pct:82,color:'var(--red)'},{name:'Calcium',pct:74,color:'var(--purple)'},{name:'Folate',pct:91,color:'var(--green)'},{name:'Protein',pct:88,color:'var(--blue)'},{name:'DHA',pct:65,color:'var(--teal)'},{name:'Vit D',pct:55,color:'var(--amber)'}];
+  document.getElementById('nutrientBars').innerHTML = nutrients.map(n => `
+    <div class="nutrient-row">
+      <div class="nutrient-label">${n.name}</div>
+      <div class="nutrient-track"><div class="nutrient-fill" style="width:${n.pct}%;background:${n.color}"></div></div>
+      <div class="nutrient-val">${n.pct}% DRI</div>
+    </div>`).join('');
+}
+
+async function getAIDietPlan() {
+  const tri = document.getElementById('trimesterSel').value;
+  const pref = document.getElementById('dietPref').value;
+  const rest = document.getElementById('restrictions').value;
+  const r = document.getElementById('aiDietResult');
+  r.style.display='block';
+  r.innerHTML=`<div class="ai-result"><h4>🤖 Generating your AI meal plan...</h4><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`You are MaMaCare nutrition AI. Suggest 3 specific Indian pregnancy superfoods for a woman in ${tri} trimester, ${pref} diet, ${rest} restriction. For each food, give: name, key pregnancy benefit, and one easy recipe idea. Format clearly. Keep it practical, warm, and under 120 words total.`}]})});
+    const data = await res.json();
+    r.innerHTML=`<div class="ai-result"><h4>🤖 Your AI Nutrition Recommendations</h4><p>${data.content[0].text}</p></div>`;
+  } catch(e) {
+    r.innerHTML=`<div class="ai-result"><h4>🤖 Nutrition Tips</h4><p>For ${tri} trimester with ${pref} diet: Focus on iron-rich foods (spinach, lentils), calcium sources (ragi, sesame seeds), and DHA for baby's brain (nuts, seeds if non-veg unavailable). Eat small meals every 2-3 hours. Stay hydrated! 🌸</p></div>`;
+  }
+}
+
+// MENTAL HEALTH CHAT
+const chatHistory = [{role:'assistant',content:'Hello Priya! 🌸 I\'m your MaMaCare AI companion. I\'m here to support your emotional wellbeing through pregnancy. How are you feeling today?'}];
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+  const area = document.getElementById('chatArea');
+  chatHistory.push({role:'user',content:msg});
+  area.innerHTML += `<div class="chat-bubble user">${msg}</div>`;
+  area.innerHTML += `<div class="chat-bubble ai" id="typingBubble"><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  area.scrollTop = area.scrollHeight;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are MaMaCare, a warm, empathetic AI mental health companion for a working woman named Priya at week 28 of pregnancy. Detect anxiety and stress patterns. Respond with compassion, provide practical coping strategies, and always validate her feelings. Keep responses concise (2-3 sentences). If high distress is detected, gently suggest professional support.',messages:chatHistory.map(m=>({role:m.role,content:m.content}))})});
+    const data = await res.json();
+    const reply = data.content[0].text;
+    chatHistory.push({role:'assistant',content:reply});
+    document.getElementById('typingBubble').outerHTML = `<div class="chat-bubble ai">${reply}</div>`;
+  } catch(e) {
+    document.getElementById('typingBubble').outerHTML = `<div class="chat-bubble ai">I hear you, Priya. Pregnancy emotions are completely valid. Take a few slow breaths — in for 4, hold for 4, out for 6. You're doing wonderfully. 🌸</div>`;
+  }
+  area.scrollTop = area.scrollHeight;
+}
+
+function selectEmotion(e) {
+  const messages = {
+    calm:'I\'m feeling calm today.',
+    anxious:'I\'m feeling a bit anxious.',
+    stressed:'I\'m feeling stressed about work.',
+    happy:'I\'m feeling happy today!',
+    sad:'I\'m feeling a bit sad.'
+  };
+  document.getElementById('chatInput').value = messages[e];
+  sendChat();
+}
+
+// WORK LIFE AI
+async function getWorkAIAdvice() {
+  const r = document.getElementById('workAiResult');
+  r.innerHTML=`<div class="ai-result"><h4>🤖 Analyzing your work patterns...</h4><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:'You are MaMaCare work-life AI for a pregnant working woman at week 28. She has been sitting 4.5 hours today, missed one break, has high screen time and moderate work stress. Give 2 specific, actionable recommendations to protect her and her baby. Each rec: bold title + 2 sentence explanation. Focus on ergonomics, stress, and fetal health. Under 100 words total.'}]})});
+    const data = await res.json();
+    r.innerHTML=`<div class="ai-result"><h4>🤖 AI Work-Life Recommendations</h4><p>${data.content[0].text}</p></div>`;
+  } catch(e) {
+    r.innerHTML=`<div class="ai-result"><h4>🤖 Work-Life Tips</h4><p>🪑 <strong>Take a standing break now</strong> — 4.5h of sitting reduces blood flow to your baby. Stand, stretch your calves for 5 minutes.<br/><br/>🧘 <strong>Try box breathing</strong> — 4 counts in, 4 hold, 4 out. Repeat 4 times to reset your stress hormones and help your baby relax too.</p></div>`;
+  }
+}
+
+// CHARTS
+function initCharts() {
+  // Trend Chart
+  const tCtx = document.getElementById('trendChart');
+  if(tCtx) new Chart(tCtx, {
+    type:'line',
+    data:{
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[
+        {label:'Wellness',data:[65,72,68,75,70,78,72],borderColor:'#e84393',backgroundColor:'rgba(232,67,147,0.08)',fill:true,tension:0.4,borderWidth:2.5,pointBackgroundColor:'#e84393'},
+        {label:'Sleep (h)',data:[6.5,7,8,7.5,6,8.5,7.5],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,0.08)',fill:true,tension:0.4,borderWidth:2.5,pointBackgroundColor:'#7c3aed'},
+        {label:'Stress',data:[5,4,6,3,7,2,4],borderColor:'#d97706',backgroundColor:'rgba(217,119,6,0.08)',fill:true,tension:0.4,borderWidth:2.5,pointBackgroundColor:'#d97706'},
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:12}}}},scales:{y:{beginAtZero:true,max:100,grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}}}
+  });
+
+  // Mental gauge
+  const gCtx = document.getElementById('mentalGaugeChart');
+  if(gCtx) new Chart(gCtx, {
+    type:'doughnut',
+    data:{labels:['Wellness','Anxiety'],datasets:[{data:[72,28],backgroundColor:['#16a34a','#d97706'],borderWidth:0,cutout:'75%'}]},
+    options:{responsive:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.parsed+'%'}}},circumference:180,rotation:-90}
+  });
+
+  // Mood week chart
+  const mCtx = document.getElementById('moodWeekChart');
+  if(mCtx) new Chart(mCtx, {
+    type:'bar',
+    data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Mood Score',data:[3,4,3,5,2,5,4],backgroundColor:['#fce4f0','#fce4f0','#fce4f0','#e84393','#fce4f0','#e84393','#7c3aed'],borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:5,ticks:{callback:v=>['','😞','😟','😐','😊','😄'][v]}},x:{grid:{display:false}}}}
+  });
+}
+
+// WEEK BAR
+function buildWeekBar() {
+  const bar = document.getElementById('weekBar');
+  if(!bar) return;
+  bar.innerHTML = Array.from({length:40},(_,i) => {
+    const w = i+1;
+    const cls = w < 28 ? 'done' : w === 28 ? 'current' : 'left';
+    return `<div class="pw-seg ${cls}" title="Week ${w}"></div>`;
+  }).join('');
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+  renderAlerts();
+  buildWeekSelector();
+  renderFetusData();
+  generateDietPlan();
+  setTimeout(()=>{initCharts();buildWeekBar();},100);
+});
+</script>
+</body>
+</html>

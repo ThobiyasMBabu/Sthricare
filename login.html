@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sthri – Login</title>
+<style>
+  :root {
+    --pink: #e84393; --pink-light: #fce4f0; --pink-soft: #f9afd1;
+    --purple: #7c3aed; --purple-light: #ede9fe;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --amber: #d97706; --amber-light: #fef3c7;
+    --red: #dc2626; --red-light: #fee2e2;
+    --green: #16a34a; --green-light: #dcfce7;
+    --blue: #2563eb; --blue-light: #dbeafe;
+    --gray: #6b7280; --gray-light: #f3f4f6;
+    --white: #ffffff; --text: #1f2937; --text2: #6b7280;
+    --radius: 16px; --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(232,67,147,0.10);
+    --shadow-lg: 0 12px 48px rgba(124,58,237,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    background: linear-gradient(135deg, #fdf6fb 0%, #fce4f0 50%, #ede9fe 100%);
+    color: var(--text); 
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  /* NAV (minimal for login) */
+  .logo { position: absolute; top: 24px; left: 24px; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--pink), var(--purple)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; box-shadow: var(--shadow); }
+  .logo-text { font-size: 20px; font-weight: 700; background: linear-gradient(90deg, var(--pink), var(--purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* LOGIN CARD */
+  .login-card {
+    background: var(--white);
+    max-width: 440px;
+    width: 100%;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.5s ease-out;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, var(--pink), var(--purple)); }
+
+  .login-header { text-align: center; margin-bottom: 32px; }
+  .login-header h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .login-header p { color: var(--text2); font-size: 15px; }
+
+  /* ROLE SELECTION TABS */
+  .role-tabs {
+    display: flex;
+    background: var(--gray-light);
+    border-radius: 12px;
+    padding: 6px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .role-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    z-index: 1;
+  }
+  .role-tab.active {
+    color: var(--pink);
+  }
+  .tab-indicator {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 6px;
+    width: calc(33.333% - 4px);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* FORM GROUP */
+  .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .form-group label { font-size: 14px; font-weight: 600; color: var(--text); }
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    background: #f9fafb;
+    color: var(--text);
+    outline: none;
+    transition: all 0.2s;
+  }
+  .form-group input:focus {
+    border-color: var(--pink);
+    background: white;
+    box-shadow: 0 0 0 4px var(--pink-light);
+  }
+
+  /* BUTTON AND LINKS */
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 8px;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  
+  .extra-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    font-size: 14px;
+  }
+  .extra-links a {
+    color: var(--purple);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+  .extra-links a:hover {
+    color: var(--pink);
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<a class="logo" href="index.html">
+  <div class="logo-icon">🌸</div>
+  <span class="logo-text">Sthri</span>
+</a>
+
+<div class="login-card">
+  <div class="login-header">
+    <h1>Welcome Back</h1>
+    <p>Sign in to your Sthri account</p>
+  </div>
+
+  <!-- ROLE TABS -->
+  <div class="role-tabs">
+    <div class="tab-indicator" id="tabIndicator"></div>
+    <div class="role-tab active" onclick="selectRole('user', 0)">User</div>
+    <div class="role-tab" onclick="selectRole('doctor', 1)">Doctor</div>
+    <div class="role-tab" onclick="selectRole('admin', 2)">Admin</div>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <form id="loginForm" onsubmit="handleLogin(event)">
+    <input type="hidden" id="selectedRole" name="role" value="user">
+    
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" required placeholder="name@example.com" autocomplete="email">
+    </div>
+    
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button type="submit" class="btn-primary" id="submitBtn">Sign in as User</button>
+  </form>
+
+  <div id="loginError" style="display:none;margin-top:16px;padding:12px 16px;background:var(--red-light);color:var(--red);border-radius:10px;font-size:14px;font-weight:600;border-left:4px solid var(--red);"></div>
+
+  <div class="extra-links">
+    <a href="#">Forgot password?</a>
+    <a href="#">Create account</a>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000/api';
+
+  function selectRole(role, index) {
+    document.getElementById('selectedRole').value = role;
+    const tabs = document.querySelectorAll('.role-tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    tabs[index].classList.add('active');
+    const indicator = document.getElementById('tabIndicator');
+    indicator.style.transform = `translateX(${index * 100}%)`;
+    const btn = document.getElementById('submitBtn');
+    const roleCapitalized = role.charAt(0).toUpperCase() + role.slice(1);
+    btn.textContent = `Sign in as ${roleCapitalized}`;
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const role     = document.getElementById('selectedRole').value;
+    const email    = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('submitBtn');
+    const errEl    = document.getElementById('loginError');
+
+    btn.textContent = 'Signing in...';
+    btn.style.opacity = '0.8';
+    btn.disabled = true;
+    errEl.style.display = 'none';
+
+    try {
+      const res  = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errEl.textContent = data.error || 'Login failed. Please check your credentials.';
+        errEl.style.display = 'block';
+        btn.textContent = `Sign in as ${role.charAt(0).toUpperCase()+role.slice(1)}`;
+        btn.style.opacity = '1';
+        btn.disabled = false;
+        return;
+      }
+
+      // Store JWT and user info
+      localStorage.setItem('sthri_token', data.token);
+      localStorage.setItem('sthri_user', JSON.stringify(data.user));
+
+      // Redirect based on role
+      if (role === 'admin')        window.location.href = 'admin.html';
+      else if (role === 'doctor')  window.location.href = 'doctor.html';
+      else                         window.location.href = 'index.html';
+
+    } catch (err) {
+      errEl.textContent = 'Cannot reach server. Make sure the backend is running on port 3000.';
+      errEl.style.display = 'block';
+      btn.textContent = `Sign in as ${role.charAt(0).toUpperCase()+role.slice(1)}`;
+      btn.style.opacity = '1';
+      btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>

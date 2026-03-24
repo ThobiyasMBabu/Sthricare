@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sthri – Admin Control Center</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --slate-900: #0f172a; --slate-800: #1e293b; --slate-700: #334155; --slate-600: #475569;
+    --slate-200: #e2e8f0; --slate-100: #f1f5f9; --slate-50: #f8fafc;
+    --blue: #2563eb; --blue-light: #dbeafe;
+    --teal: #0d9488; --teal-light: #ccfbf1;
+    --red: #dc2626; --red-light: #fee2e2;
+    --amber: #d97706; --amber-light: #fef3c7;
+    --green: #16a34a; --green-light: #dcfce7;
+    --purple: #7c3aed; --purple-light: #ede9fe;
+    --shadow: 0 2px 12px rgba(15,23,42,0.06);
+    --shadow-md: 0 8px 24px rgba(15,23,42,0.10);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--slate-50); color: var(--slate-800); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* TOP NAV */
+  .top-nav { background: white; border-bottom: 1px solid var(--slate-200); height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; z-index: 10; box-shadow: var(--shadow); }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 34px; height: 34px; background: linear-gradient(135deg, var(--slate-800), var(--slate-600)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
+  .logo-text { font-size: 18px; font-weight: 800; color: var(--slate-900); }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--slate-600); cursor: pointer; border: none; background: none; transition: all 0.2s; }
+  .nav-tab:hover { background: var(--slate-100); color: var(--slate-900); }
+  .nav-tab.active { background: var(--slate-900); color: white; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .user-chip { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 20px; background: var(--slate-100); color: var(--slate-700); }
+  .online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
+  .logout-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1.5px solid var(--slate-200); border-radius: 8px; background: white; color: var(--red); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .logout-btn:hover { background: var(--red-light); border-color: var(--red); }
+
+  /* MAIN */
+  .main { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 32px; }
+
+  /* VIEW SECTIONS */
+  .view { display: none; animation: fadeIn 0.25s ease; }
+  .view.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-title { font-size: 24px; font-weight: 800; color: var(--slate-900); margin-bottom: 4px; }
+  .page-sub { font-size: 14px; color: var(--slate-600); margin-bottom: 28px; }
+
+  /* METRICS ROW */
+  .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+  .metric-card { background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--slate-100); box-shadow: var(--shadow); border-left: 4px solid var(--slate-200); }
+  .metric-card.blue { border-left-color: var(--blue); }
+  .metric-card.teal { border-left-color: var(--teal); }
+  .metric-card.red { border-left-color: var(--red); }
+  .metric-card.green { border-left-color: var(--green); }
+  .metric-card.purple { border-left-color: var(--purple); }
+  .metric-card.amber { border-left-color: var(--amber); }
+  .m-label { font-size: 12px; font-weight: 600; color: var(--slate-600); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .m-val { font-size: 30px; font-weight: 800; color: var(--slate-900); }
+  .m-trend { font-size: 12px; margin-top: 6px; font-weight: 500; color: var(--teal); }
+
+  /* PANEL */
+  .panel { background: white; border-radius: var(--radius); border: 1px solid var(--slate-100); box-shadow: var(--shadow); overflow: hidden; }
+  .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center; }
+  .panel-header h3 { font-size: 16px; font-weight: 700; }
+  .panel-search { padding: 8px 12px; border: 1px solid var(--slate-200); border-radius: 6px; outline: none; font-size: 13px; background: var(--slate-50); width: 220px; }
+
+  /* DATA TABLE */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th { padding: 12px 20px; font-size: 11px; font-weight: 700; color: var(--slate-600); text-transform: uppercase; letter-spacing: 0.5px; background: var(--slate-50); border-bottom: 1px solid var(--slate-100); text-align: left; }
+  .data-table td { padding: 14px 20px; font-size: 13px; border-bottom: 1px solid var(--slate-100); vertical-align: middle; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tbody tr { transition: background 0.15s; }
+  .data-table tbody tr:hover { background: var(--slate-50); }
+
+  /* TAGS */
+  .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .tag.blue { background: var(--blue-light); color: var(--blue); }
+  .tag.green { background: var(--green-light); color: var(--green); }
+  .tag.red { background: var(--red-light); color: var(--red); }
+  .tag.amber { background: var(--amber-light); color: var(--amber); }
+  .tag.slate { background: var(--slate-100); color: var(--slate-700); }
+  .tag.purple { background: var(--purple-light); color: var(--purple); }
+
+  /* NAME BLOCK */
+  .name-block { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 34px; height: 34px; border-radius: 8px; background: var(--slate-100); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--slate-600); flex-shrink: 0; }
+  .avatar.round { border-radius: 50%; }
+  .name-text { font-weight: 600; color: var(--slate-900); }
+  .sub-text { font-size: 11px; color: var(--slate-600); margin-top: 2px; }
+
+  /* ACTION BUTTONS */
+  .action-btn { border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .action-btn.primary { background: var(--slate-900); color: white; }
+  .action-btn.primary:hover { background: var(--slate-700); }
+  .action-btn.ghost { background: var(--slate-100); color: var(--slate-700); }
+  .action-btn.ghost:hover { background: var(--slate-200); }
+  .action-btn.danger { background: var(--red-light); color: var(--red); }
+  .action-btn.danger:hover { background: var(--red); color: white; }
+  .action-btn.success { background: var(--green-light); color: var(--green); }
+
+  .btn-group { display: flex; gap: 6px; }
+
+  /* ANALYTICS */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .chart-card { background: white; border-radius: var(--radius); padding: 24px; border: 1px solid var(--slate-100); box-shadow: var(--shadow); }
+  .chart-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--slate-900); }
+
+  /* LOGS */
+  .log-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-btn { padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid var(--slate-200); background: white; color: var(--slate-600); cursor: pointer; transition: all 0.15s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--slate-900); color: white; border-color: var(--slate-900); }
+  .log-list { display: flex; flex-direction: column; gap: 2px; }
+  .log-item { display: grid; grid-template-columns: 160px 80px 1fr; gap: 16px; align-items: start; padding: 14px 20px; background: white; border-bottom: 1px solid var(--slate-100); font-size: 13px; transition: background 0.15s; }
+  .log-item:first-child { border-radius: 12px 12px 0 0; }
+  .log-item:last-child { border-bottom: none; border-radius: 0 0 12px 12px; }
+  .log-item:hover { background: var(--slate-50); }
+  .log-time { color: var(--slate-600); font-size: 12px; font-family: monospace; }
+  .log-msg { color: var(--slate-800); line-height: 1.5; }
+  .log-msg strong { color: var(--slate-900); }
+  .log-panel { border: 1px solid var(--slate-100); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+
+  /* OVERVIEW GRID */
+  .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav">
+  <div style="display:flex;align-items:center;gap:20px;">
+    <a class="logo" href="#">
+      <div class="logo-icon">⚙️</div>
+      <span class="logo-text">Sthri <span style="font-weight:400;color:var(--slate-600)">Admin</span></span>
+    </a>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchView('view-overview', this)">Overview</button>
+      <button class="nav-tab" onclick="switchView('view-doctors', this)">Doctors</button>
+      <button class="nav-tab" onclick="switchView('view-patients', this)">Patients</button>
+      <button class="nav-tab" onclick="switchView('view-analytics', this)">Analytics</button>
+      <button class="nav-tab" onclick="switchView('view-logs', this)">System Logs</button>
+    </div>
+  </div>
+  <div class="nav-right">
+    <div class="user-chip">
+      <div class="online-dot"></div>
+      City General Admin
+    </div>
+    <button class="logout-btn" onclick="window.location.href='login.html'">🚪 Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- ===== VIEW: OVERVIEW ===== -->
+  <div id="view-overview" class="view active">
+    <div class="page-title">Platform Overview</div>
+    <div class="page-sub">City General Hospital · Live system health monitoring</div>
+
+    <div class="metrics-row">
+      <div class="metric-card blue">
+        <div class="m-label">Total Active Patients</div>
+        <div class="m-val">4,821</div>
+        <div class="m-trend">▲ +12% vs last month</div>
+      </div>
+      <div class="metric-card teal">
+        <div class="m-label">Verified Doctors</div>
+        <div class="m-val">342</div>
+        <div class="m-trend">▲ 5 provisioned this week</div>
+      </div>
+      <div class="metric-card red">
+        <div class="m-label">Critical Alerts</div>
+        <div class="m-val">14</div>
+        <div class="m-trend" style="color:var(--red)">Across 8 patients</div>
+      </div>
+      <div class="metric-card green">
+        <div class="m-label">Avg AI Wellness Score</div>
+        <div class="m-val">86%</div>
+        <div class="m-trend">▲ Improving platform-wide</div>
+      </div>
+    </div>
+
+    <div class="overview-grid">
+      <!-- Recent Doctors -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Doctor Directory (Preview)</h3>
+          <button class="action-btn primary" onclick="switchView('view-doctors', document.querySelectorAll('.nav-tab')[1])">View All →</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Doctor</th><th>Status</th><th>Patients</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="name-block"><div class="avatar">SJ</div><div><div class="name-text">Dr. Sarah Jenkins</div><div class="sub-text">OB-GYN</div></div></div></td>
+              <td><span class="tag blue">Active</span></td>
+              <td><strong>148</strong></td>
+            </tr>
+            <tr>
+              <td><div class="name-block"><div class="avatar">MR</div><div><div class="name-text">Dr. Marcus Reed</div><div class="sub-text">MFM Specialist</div></div></div></td>
+              <td><span class="tag blue">Active</span></td>
+              <td><strong>84</strong></td>
+            </tr>
+            <tr>
+              <td><div class="name-block"><div class="avatar">LK</div><div><div class="name-text">Dr. Lisa Kim</div><div class="sub-text">Midwife</div></div></div></td>
+              <td><span class="tag slate">On Leave</span></td>
+              <td><strong>210</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Recent Patients -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Patient Directory (Preview)</h3>
+          <button class="action-btn primary" onclick="switchView('view-patients', document.querySelectorAll('.nav-tab')[2])">View All →</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Patient</th><th>Weeks</th><th>AI Risk</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="name-block"><div class="avatar round">PS</div><div><div class="name-text">Priya Sharma</div><div class="sub-text">Dr. Jenkins</div></div></div></td>
+              <td>28</td>
+              <td><span class="tag red">Elevated</span></td>
+            </tr>
+            <tr>
+              <td><div class="name-block"><div class="avatar round">AP</div><div><div class="name-text">Anya Patel</div><div class="sub-text">Dr. Jenkins</div></div></div></td>
+              <td>14</td>
+              <td><span class="tag green">Low</span></td>
+            </tr>
+            <tr>
+              <td><div class="name-block"><div class="avatar round">EJ</div><div><div class="name-text">Emily Johnson</div><div class="sub-text">Dr. Reed</div></div></div></td>
+              <td>38</td>
+              <td><span class="tag green">Low</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===== VIEW: DOCTORS ===== -->
+  <div id="view-doctors" class="view">
+    <div class="page-title">Doctor Management</div>
+    <div class="page-sub">Provision, review, and manage medical practitioners on the platform</div>
+
+    <div class="metrics-row" style="grid-template-columns:repeat(3,1fr);">
+      <div class="metric-card teal"><div class="m-label">Active Doctors</div><div class="m-val">338</div><div class="m-trend">↑ vs last month</div></div>
+      <div class="metric-card amber"><div class="m-label">On Leave</div><div class="m-val">3</div><div class="m-trend">Coverage assigned</div></div>
+      <div class="metric-card red"><div class="m-label">Suspended</div><div class="m-val">1</div><div class="m-trend" style="color:var(--red)">Pending review</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>All Doctors (342)</h3>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="panel-search" type="text" placeholder="Search doctors...">
+          <button class="action-btn primary">+ Provision Doctor</button>
+        </div>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Doctor</th><th>Specialty</th><th>Hospital</th><th>Active Patients</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="name-block"><div class="avatar">SJ</div><div><div class="name-text">Dr. Sarah Jenkins</div><div class="sub-text">DOC-992 · sarah@cgh.org</div></div></div></td>
+            <td>OB-GYN</td>
+            <td>City General</td>
+            <td><strong>148</strong></td>
+            <td><span class="tag blue">Active</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost" onclick="alert('View full profile: Dr. Sarah Jenkins')">View</button><button class="action-btn danger" onclick="alert('Suspend Dr. Sarah Jenkins?')">Suspend</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="name-block"><div class="avatar">MR</div><div><div class="name-text">Dr. Marcus Reed</div><div class="sub-text">DOC-104 · marcus@cgh.org</div></div></div></td>
+            <td>Maternal-Fetal Medicine</td>
+            <td>City General</td>
+            <td><strong>84</strong></td>
+            <td><span class="tag blue">Active</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost" onclick="alert('View full profile: Dr. Marcus Reed')">View</button><button class="action-btn danger" onclick="alert('Suspend Dr. Marcus Reed?')">Suspend</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="name-block"><div class="avatar">LK</div><div><div class="name-text">Dr. Lisa Kim</div><div class="sub-text">DOC-552 · lisa@cgh.org</div></div></div></td>
+            <td>Midwife</td>
+            <td>City General</td>
+            <td><strong>210</strong></td>
+            <td><span class="tag slate">On Leave</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost">View</button><button class="action-btn success" onclick="alert('Restore Dr. Lisa Kim to Active?')">Restore</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="name-block"><div class="avatar">AT</div><div><div class="name-text">Dr. Alan Turing</div><div class="sub-text">DOC-881 · alan@cgh.org</div></div></div></td>
+            <td>OB-GYN</td>
+            <td>City General</td>
+            <td><strong>12</strong></td>
+            <td><span class="tag red">Suspended</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost">View</button><button class="action-btn success" onclick="alert('Reinstate Dr. Alan Turing?')">Reinstate</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ===== VIEW: PATIENTS ===== -->
+  <div id="view-patients" class="view">
+    <div class="page-title">Patient Directory</div>
+    <div class="page-sub">Monitor all registered pregnant users, their care providers and AI risk tiers</div>
+
+    <div class="metrics-row" style="grid-template-columns:repeat(4,1fr);">
+      <div class="metric-card blue"><div class="m-label">Total Patients</div><div class="m-val">4,821</div><div class="m-trend">▲ 12% this month</div></div>
+      <div class="metric-card red"><div class="m-label">High Risk</div><div class="m-val">182</div><div class="m-trend" style="color:var(--red)">Requires active monitoring</div></div>
+      <div class="metric-card amber"><div class="m-label">3rd Trimester</div><div class="m-val">1,103</div><div class="m-trend">Close to due dates</div></div>
+      <div class="metric-card green"><div class="m-label">Low Risk</div><div class="m-val">4,536</div><div class="m-trend">Stable & well-monitored</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3>All Patients (4,821)</h3>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="panel-search" type="text" placeholder="Search patients...">
+          <select style="padding:8px 12px;border:1px solid var(--slate-200);border-radius:6px;outline:none;font-size:13px;background:var(--slate-50)">
+            <option>Filter: All Risk</option>
+            <option>High Risk</option>
+            <option>Low Risk</option>
+          </select>
+        </div>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Patient</th><th>Assigned Doctor</th><th>Gestation</th><th>App Usage</th><th>AI Risk Tier</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="name-block"><div class="avatar round">PS</div><div><div class="name-text">Priya Sharma</div><div class="sub-text">MC-88301 · Age 31</div></div></div></td>
+            <td>Dr. Sarah Jenkins</td>
+            <td>28 Weeks</td>
+            <td>High (Daily)</td>
+            <td><span class="tag red">Elevated</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost">View</button><button class="action-btn ghost" onclick="alert('Reassign Priya Sharma to a different doctor')">Reassign</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="name-block"><div class="avatar round">AP</div><div><div class="name-text">Anya Patel</div><div class="sub-text">MC-91244 · Age 28</div></div></div></td>
+            <td>Dr. Sarah Jenkins</td>
+            <td>14 Weeks</td>
+            <td>Avg (3x/week)</td>
+            <td><span class="tag green">Low Risk</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost">View</button><button class="action-btn ghost" onclick="alert('Reassign Anya Patel')">Reassign</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="name-block"><div class="avatar round">EJ</div><div><div class="name-text">Emily Johnson</div><div class="sub-text">MC-44021 · Age 26</div></div></div></td>
+            <td>Dr. Marcus Reed</td>
+            <td>38 Weeks</td>
+            <td>High (Daily)</td>
+            <td><span class="tag green">Low Risk</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost">View</button><button class="action-btn ghost">Reassign</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="name-block"><div class="avatar round">CS</div><div><div class="name-text">Chloe Smith</div><div class="sub-text">MC-55921 · Age 22</div></div></div></td>
+            <td>Dr. Lisa Kim</td>
+            <td>9 Weeks</td>
+            <td>Low (1x/week)</td>
+            <td><span class="tag slate">Unknown</span></td>
+            <td><div class="btn-group"><button class="action-btn ghost">View</button><button class="action-btn ghost">Reassign</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ===== VIEW: ANALYTICS ===== -->
+  <div id="view-analytics" class="view">
+    <div class="page-title">Hospital Analytics</div>
+    <div class="page-sub">AI-powered insights across patient wellness, risk trends, and doctor load distribution</div>
+
+    <div class="metrics-row">
+      <div class="metric-card green"><div class="m-label">Avg Wellness Score</div><div class="m-val">86%</div><div class="m-trend">▲ +4% this month</div></div>
+      <div class="metric-card purple"><div class="m-label">AI Check-ins (Today)</div><div class="m-val">1,241</div><div class="m-trend">▲ Peak usage at 9AM</div></div>
+      <div class="metric-card amber"><div class="m-label">Alerts Resolved (7d)</div><div class="m-val">89</div><div class="m-trend">Avg response: 2.1h</div></div>
+      <div class="metric-card blue"><div class="m-label">Care Plans Assigned</div><div class="m-val">327</div><div class="m-trend">▲ +18 this week</div></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">📈 Patient Wellness Trend (Last 7 Days)</div>
+        <canvas id="wellnessChart" height="160"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">⚠️ Alert Volume by Category</div>
+        <canvas id="alertsChart" height="160"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">👥 Doctor Patient-Load Distribution</div>
+        <canvas id="loadChart" height="160"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🤰 Trimester Breakdown</div>
+        <canvas id="trimesterChart" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===== VIEW: SYSTEM LOGS ===== -->
+  <div id="view-logs" class="view">
+    <div class="page-title">System Logs</div>
+    <div class="page-sub">Audit trail of all platform events, access, and automated AI actions</div>
+
+    <div class="log-filters">
+      <button class="filter-btn active" onclick="filterLogs('all', this)">All Events</button>
+      <button class="filter-btn" onclick="filterLogs('auth', this)">Auth / Login</button>
+      <button class="filter-btn" onclick="filterLogs('alert', this)">AI Alerts</button>
+      <button class="filter-btn" onclick="filterLogs('admin', this)">Admin Actions</button>
+      <button class="filter-btn" onclick="filterLogs('system', this)">System</button>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-item" data-type="auth"><span class="log-time">2026-03-23 18:25:11</span><span><span class="tag blue">AUTH</span></span><span class="log-msg"><strong>Admin login:</strong> admin@cgh.org logged in from 192.168.1.102</span></div>
+      <div class="log-item" data-type="alert"><span class="log-time">2026-03-23 18:12:44</span><span><span class="tag red">ALERT</span></span><span class="log-msg"><strong>AI Alert generated</strong> for patient MC-88301 (Priya Sharma) — Sustained stress &gt; 8/10 for 3 days</span></div>
+      <div class="log-item" data-type="alert"><span class="log-time">2026-03-23 17:55:09</span><span><span class="tag amber">ALERT</span></span><span class="log-msg"><strong>AI Alert generated</strong> for patient MC-91244 (Anya Patel) — Severe nausea / dehydration pattern detected</span></div>
+      <div class="log-item" data-type="auth"><span class="log-time">2026-03-23 17:48:30</span><span><span class="tag blue">AUTH</span></span><span class="log-msg"><strong>Doctor login:</strong> Dr. Sarah Jenkins (DOC-992) logged in from 10.0.0.45</span></div>
+      <div class="log-item" data-type="admin"><span class="log-time">2026-03-23 16:30:02</span><span><span class="tag purple">ADMIN</span></span><span class="log-msg"><strong>Doctor suspension:</strong> DOC-881 (Dr. Alan Turing) suspended — reason: Complaint #CR-2245 pending review</span></div>
+      <div class="log-item" data-type="admin"><span class="log-time">2026-03-23 15:10:55</span><span><span class="tag purple">ADMIN</span></span><span class="log-msg"><strong>Care Plan assigned:</strong> "Hypertension Baseline Protocol" assigned by DOC-992 to patient MC-88301</span></div>
+      <div class="log-item" data-type="system"><span class="log-time">2026-03-23 14:00:00</span><span><span class="tag slate">SYSTEM</span></span><span class="log-msg"><strong>Scheduled AI batch run</strong> completed — 4,821 patient profiles re-scored. Avg wellness: 86%</span></div>
+      <div class="log-item" data-type="system"><span class="log-time">2026-03-23 08:00:03</span><span><span class="tag slate">SYSTEM</span></span><span class="log-msg"><strong>Database backup</strong> completed successfully. Snapshot stored: backup-20260323-0800</span></div>
+      <div class="log-item" data-type="auth"><span class="log-time">2026-03-22 22:15:47</span><span><span class="tag blue">AUTH</span></span><span class="log-msg"><strong>User login:</strong> patient MC-88301 (Priya Sharma) logged in from mobile app</span></div>
+      <div class="log-item" data-type="alert"><span class="log-time">2026-03-22 20:05:19</span><span><span class="tag amber">ALERT</span></span><span class="log-msg"><strong>AI Alert dismissed</strong> by DOC-992 for patient MC-44021 (Emily Johnson) — Alert type: Screen Time</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // --- VIEW SWITCHER ---
+  function switchView(viewId, tabEl) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    if (tabEl) tabEl.classList.add('active');
+    if (viewId === 'view-analytics') initCharts();
+  }
+
+  // --- LOG FILTER ---
+  function filterLogs(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.log-item').forEach(item => {
+      item.style.display = (type === 'all' || item.dataset.type === type) ? 'grid' : 'none';
+    });
+  }
+
+  // --- CHARTS (lazy init once) ---
+  let chartsInitialized = false;
+  function initCharts() {
+    if (chartsInitialized) return;
+    chartsInitialized = true;
+
+    const font = { font: { family: 'Segoe UI' } };
+
+    // Wellness Trend
+    new Chart(document.getElementById('wellnessChart'), {
+      type: 'line',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets: [{
+          label: 'Avg Wellness %',
+          data: [82, 84, 83, 85, 86, 87, 86],
+          borderColor: '#0d9488', backgroundColor: 'rgba(13,148,136,0.08)',
+          borderWidth: 2.5, pointRadius: 4, tension: 0.4, fill: true
+        }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { min: 75, max: 100, ...font }, x: { ...font } } }
+    });
+
+    // Alerts by Category
+    new Chart(document.getElementById('alertsChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Stress', 'BP Risk', 'Dehydration', 'Sitting', 'Diet', 'Sleep'],
+        datasets: [{
+          data: [35, 22, 18, 41, 12, 20],
+          backgroundColor: ['#fef3c7','#fee2e2','#dbeafe','#ede9fe','#dcfce7','#ccfbf1'],
+          borderColor: ['#d97706','#dc2626','#2563eb','#7c3aed','#16a34a','#0d9488'],
+          borderWidth: 2
+        }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { ...font }, x: { ...font } } }
+    });
+
+    // Doctor Load
+    new Chart(document.getElementById('loadChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Dr. Jenkins', 'Dr. Reed', 'Dr. Kim', 'Dr. Others'],
+        datasets: [{
+          label: 'Patients',
+          data: [148, 84, 210, 3230],
+          backgroundColor: ['#dbeafe','#ede9fe','#ccfbf1','#f1f5f9'],
+          borderColor: ['#2563eb','#7c3aed','#0d9488','#94a3b8'],
+          borderWidth: 2
+        }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { ...font }, x: { ...font } }, indexAxis: 'y' }
+    });
+
+    // Trimester Donut
+    new Chart(document.getElementById('trimesterChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['1st Trimester', '2nd Trimester', '3rd Trimester'],
+        datasets: [{
+          data: [1820, 1898, 1103],
+          backgroundColor: ['#dbeafe','#ede9fe','#fce4f0'],
+          borderColor: ['#2563eb','#7c3aed','#e84393'],
+          borderWidth: 2
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom', labels: { font: { family: 'Segoe UI', size: 12 } } } } }
+    });
+  }
+</script>
+</body>
+</html>
